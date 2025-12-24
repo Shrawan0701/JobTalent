@@ -9,7 +9,7 @@ export default function Landing() {
       <header className="navbar navbar-expand-lg navbar-light bg-white">
         <div className="container">
           <Link className="navbar-brand fw-bold" to="/">
-            JobTalent
+            Curson
           </Link>
 
           <nav className="navbar-nav ms-auto d-flex align-items-center">
@@ -263,7 +263,7 @@ export default function Landing() {
           <div className="cta-content text-center">
             <h2 className="cta-title">Ready to Transform Your Career?</h2>
             <p className="cta-subtitle">
-              Join thousands of professionals and employers building their future on JobTalent.
+              Join thousands of professionals and employers building their future on Curson.
               Sign up today and discover your next opportunity.
             </p>
             <div className="d-flex justify-content-center gap-3 flex-wrap">
@@ -286,7 +286,7 @@ export default function Landing() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <h5>JobTalent</h5>
+              <h5>Curson</h5>
               <p className="mb-0">
                 Connecting talent with opportunity worldwide.
               </p>
@@ -317,7 +317,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p className="mb-0">© 2024 JobTalent. All rights reserved.</p>
+            <p className="mb-0">© 2024 Curson. All rights reserved.</p>
           </div>
         </div>
       </footer>
