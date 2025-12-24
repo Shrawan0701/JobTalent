@@ -1,7 +1,9 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
+
 import { errorHandler } from './middleware/errorHandler.js';
 import { startJobScraperWorker } from './workers/jobScraper.js';
 
@@ -11,12 +13,20 @@ import profileRoutes from './routes/profileRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import passport from 'passport';
+import './config/passport.js';
+import googleAuthRoutes from './routes/googleAuthRoutes.js';
 
-dotenv.config();
+
+
+
+
+
 
 const app = express();
 
 app.use(helmet());
+app.use(passport.initialize());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
@@ -30,6 +40,9 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/auth', googleAuthRoutes); // 🔥 REQUIRED
+
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

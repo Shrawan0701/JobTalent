@@ -3,15 +3,19 @@ import { AuthContext } from '../context/AuthContext.jsx';
 import * as jobService from '../services/jobService.js';
 import * as applicationService from '../services/applicationService.js';
 import '../assets/css/dashboard.css';
+import { useNavigate } from 'react-router-dom';
 
 export default function EmployerDashboard() {
   const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('jobs');
   const [showPostForm, setShowPostForm] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -39,11 +43,14 @@ export default function EmployerDashboard() {
 
   const fetchApplications = async (jobId) => {
     try {
+      setLoading(true);
       const response = await applicationService.getApplicationsForJob(jobId);
       setApplications(response.applications || []);
       setSelectedJobId(jobId);
     } catch (error) {
       console.error('Error fetching applications:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,12 +64,19 @@ export default function EmployerDashboard() {
 
   const handlePostJob = async (e) => {
     e.preventDefault();
+
     try {
       await jobService.createJob({
         ...formData,
-        skills: formData.skills.split(',').map(s => s.trim()),
+        skills: formData.skills
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
       });
+
       alert('Job posted successfully!');
+      setShowPostForm(false);
+
       setFormData({
         title: '',
         description: '',
@@ -71,21 +85,32 @@ export default function EmployerDashboard() {
         jobType: 'full-time',
         skills: '',
       });
-      setShowPostForm(false);
+
       fetchJobs();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to post job');
     }
   };
 
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className="dashboard-container">
+      {/* NAVBAR */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
         <div className="container">
-          <span className="navbar-brand fw-bold">🚀 JobTalent</span>
+          <span className="navbar-brand fw-bold"> JobTalent</span>
+
           <div className="ms-auto">
             <span className="me-3 text-muted">{user?.email}</span>
-            <button className="btn btn-outline-danger btn-sm" onClick={logout}>
+            <button
+              className="btn btn-outline-danger btn-sm"
+              onClick={handleLogout}
+            >
               Logout
             </button>
           </div>
@@ -93,23 +118,27 @@ export default function EmployerDashboard() {
       </nav>
 
       <div className="container py-4">
+        {/* TABS */}
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
             <button
-              className={"nav-link" + (activeTab === 'jobs' ? ' active' : '')}
+              className={`nav-link ${activeTab === 'jobs' ? 'active' : ''}`}
               onClick={() => setActiveTab('jobs')}
             >
-              📋 My Jobs
+               My Jobs
             </button>
           </li>
+
           <li className="nav-item">
             <button
-              className={"nav-link" + (activeTab === 'applications' ? ' active' : '')}
+              className={`nav-link ${activeTab === 'applications' ? 'active' : ''}`}
               onClick={() => setActiveTab('applications')}
+              disabled={!selectedJobId}
             >
-              👥 Applications
+              Applications
             </button>
           </li>
+
           <li className="nav-item ms-auto">
             <button
               className="btn btn-primary btn-sm"
@@ -120,9 +149,11 @@ export default function EmployerDashboard() {
           </li>
         </ul>
 
+        {/* POST JOB FORM */}
         {showPostForm && (
           <div className="card mb-4 p-4">
             <h4 className="mb-3">Post a New Job</h4>
+
             <form onSubmit={handlePostJob}>
               <div className="row">
                 <div className="col-md-6 mb-3">
@@ -136,6 +167,7 @@ export default function EmployerDashboard() {
                     required
                   />
                 </div>
+
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Location</label>
                   <input
@@ -148,6 +180,7 @@ export default function EmployerDashboard() {
                   />
                 </div>
               </div>
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Salary</label>
@@ -159,6 +192,7 @@ export default function EmployerDashboard() {
                     onChange={handleInputChange}
                   />
                 </div>
+
                 <div className="col-md-6 mb-3">
                   <label className="form-label">Job Type</label>
                   <select
@@ -174,17 +208,19 @@ export default function EmployerDashboard() {
                   </select>
                 </div>
               </div>
+
               <div className="mb-3">
                 <label className="form-label">Description</label>
                 <textarea
                   className="form-control"
                   name="description"
+                  rows="4"
                   value={formData.description}
                   onChange={handleInputChange}
-                  rows="4"
                   required
                 />
               </div>
+
               <div className="mb-3">
                 <label className="form-label">Skills (comma separated)</label>
                 <input
@@ -193,12 +229,14 @@ export default function EmployerDashboard() {
                   name="skills"
                   value={formData.skills}
                   onChange={handleInputChange}
-                  placeholder="e.g. React, Node.js, PostgreSQL"
+                  placeholder="React, Node.js, PostgreSQL"
                 />
               </div>
+
               <button type="submit" className="btn btn-primary">
                 Post Job
               </button>
+
               <button
                 type="button"
                 className="btn btn-secondary ms-2"
@@ -210,9 +248,11 @@ export default function EmployerDashboard() {
           </div>
         )}
 
+        {/* JOBS TAB */}
         {activeTab === 'jobs' && (
-          <div>
+          <>
             <h2 className="mb-4">My Job Postings</h2>
+
             {loading ? (
               <p>Loading...</p>
             ) : jobs.length === 0 ? (
@@ -224,9 +264,12 @@ export default function EmployerDashboard() {
                     <div className="card shadow-sm h-100">
                       <div className="card-body">
                         <h5 className="card-title">{job.title}</h5>
-                        <p className="card-text text-muted">{job.location}</p>
-                        <p className="card-text">{job.salary || 'Salary not mentioned'}</p>
-                        <p className="card-text small">{job.description?.substring(0, 100)}...</p>
+                        <p className="text-muted">{job.location}</p>
+                        <p>{job.salary || 'Salary not mentioned'}</p>
+                        <p className="small">
+                          {job.description?.substring(0, 100)}...
+                        </p>
+
                         <button
                           className="btn btn-info btn-sm"
                           onClick={() => {
@@ -236,60 +279,69 @@ export default function EmployerDashboard() {
                         >
                           View Applications
                         </button>
-                        <button className="btn btn-danger btn-sm ms-2">Delete</button>
+
+                        <button className="btn btn-danger btn-sm ms-2">
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </>
         )}
 
+        {/* APPLICATIONS TAB */}
         {activeTab === 'applications' && (
-          <div>
-            <h2 className="mb-4">Applications for Selected Job</h2>
-            {selectedJobId ? (
-              loading ? (
-                <p>Loading...</p>
-              ) : applications.length === 0 ? (
-                <p className="text-muted">No applications yet</p>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Applied On</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {applications.map((app) => (
-                        <tr key={app.id}>
-                          <td>{app.first_name} {app.last_name}</td>
-                          <td>{app.email}</td>
-                          <td>
-                            <span className="badge bg-info">{app.status}</span>
-                          </td>
-                          <td>{new Date(app.created_at).toLocaleDateString()}</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary">
-                              Review
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )
-            ) : (
+          <>
+            <h2 className="mb-4">Applications</h2>
+
+            {!selectedJobId ? (
               <p className="text-muted">Select a job to view applications</p>
+            ) : loading ? (
+              <p>Loading...</p>
+            ) : applications.length === 0 ? (
+              <p className="text-muted">No applications yet</p>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Applied On</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {applications.map((app) => (
+                      <tr key={app.id}>
+                        <td>
+                          {app.first_name} {app.last_name}
+                        </td>
+                        <td>{app.email}</td>
+                        <td>
+                          <span className="badge bg-info">
+                            {app.status}
+                          </span>
+                        </td>
+                        <td>
+                          {new Date(app.created_at).toLocaleDateString()}
+                        </td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-primary">
+                            Review
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

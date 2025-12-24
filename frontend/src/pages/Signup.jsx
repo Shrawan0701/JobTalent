@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
 import '../assets/css/auth.css';
 
@@ -20,6 +19,11 @@ export default function Signup() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 🔥 GOOGLE SIGNUP HANDLER
+  const handleGoogleSignup = () => {
+    window.location.href = 'http://localhost:5000/api/auth/google';
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,43 +75,51 @@ export default function Signup() {
       <div className="auth-card">
         <h1 className="text-center mb-4">Create Account</h1>
 
+        {/* 🔥 GOOGLE SIGNUP BUTTON */}
+        <button
+          className="btn btn-outline-dark w-100 mb-3 d-flex align-items-center justify-content-center gap-2"
+          onClick={handleGoogleSignup}
+        >
+          <span style={{ fontSize: '18px' }}>🔵</span>
+          Continue with Google
+        </button>
+
+        <div className="text-center text-muted mb-3">or</div>
+
+        {/* ROLE SELECTOR */}
         <div className="role-selector mb-4">
-         <label
-  className={'role-option' + (formData.role === 'talent' ? ' active' : '')}
->
-  <input
-    type="radio"
-    name="role"
-    value="talent"
-    checked={formData.role === 'talent'}
-    onChange={handleChange}
-  />
-  <span>
-    <span className="emoji">🎯</span>
-    I’m looking for a job
-  </span>
-</label>
+          <label className={'role-option' + (formData.role === 'talent' ? ' active' : '')}>
+            <input
+              type="radio"
+              name="role"
+              value="talent"
+              checked={formData.role === 'talent'}
+              onChange={handleChange}
+            />
+            <span>
+              <span className="emoji">🎯</span>
+              I’m looking for a job
+            </span>
+          </label>
 
-<label
-  className={'role-option' + (formData.role === 'employer' ? ' active' : '')}
->
-  <input
-    type="radio"
-    name="role"
-    value="employer"
-    checked={formData.role === 'employer'}
-    onChange={handleChange}
-  />
-  <span>
-    <span className="emoji">🏢</span>
-    I’m hiring
-  </span>
-</label>
-
+          <label className={'role-option' + (formData.role === 'employer' ? ' active' : '')}>
+            <input
+              type="radio"
+              name="role"
+              value="employer"
+              checked={formData.role === 'employer'}
+              onChange={handleChange}
+            />
+            <span>
+              <span className="emoji">🏢</span>
+              I’m hiring
+            </span>
+          </label>
         </div>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
+        {/* EMAIL SIGNUP FORM */}
         <form onSubmit={handleSubmit}>
           <div className="row">
             <div className="col-md-6 mb-3">
@@ -121,6 +133,7 @@ export default function Signup() {
                 required
               />
             </div>
+
             <div className="col-md-6 mb-3">
               <label className="form-label">Last Name</label>
               <input
