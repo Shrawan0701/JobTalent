@@ -9,7 +9,7 @@ export default function Landing() {
       <header className="navbar navbar-expand-lg navbar-light bg-white">
         <div className="container">
           <Link className="navbar-brand fw-bold" to="/">
-            JobTalent
+            Curson
           </Link>
 
           <nav className="navbar-nav ms-auto d-flex align-items-center">
