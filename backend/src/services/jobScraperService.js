@@ -1,43 +1,37 @@
-import { query } from '../config/database.js';
+import { GREENHOUSE_COMPANIES } from '../config/greenhouse.js';
 import { JOB_SOURCES } from '../config/constants.js';
+import { fetchGreenhouseJobs } from './greenhouseService.js';
+import { normalizeGreenhouseJob } from './jobNormalizer.js';
+import { upsertAggregatedJob } from './jobRepository.js';
+import { query } from '../config/database.js';
 
 export const scrapeJobs = async () => {
-  try {
-    console.log('Starting job scraping...');
-    
-    // Example: Scrape from public job APIs
-    const sources = [
-      {
-        name: 'Sample Tech Jobs',
-        url: 'https://api.example.com/jobs',
-        parser: 'json'
+  console.log('🔄 Greenhouse scraping started');
+
+  for (const company of GREENHOUSE_COMPANIES) {
+    try {
+      const jobs = await fetchGreenhouseJobs(company.boardToken);
+
+      for (const ghJob of jobs) {
+        const job = normalizeGreenhouseJob(ghJob, company);
+        await upsertAggregatedJob(job);
       }
-    ];
-    
-    for (const source of sources) {
-      try {
-        // Would integrate real scraping here
-        console.log(`Processing ${source.name}`);
-      } catch (error) {
-        console.error(`Error scraping ${source.name}:`, error.message);
-      }
+
+      console.log(`✅ ${company.name}: ${jobs.length} jobs`);
+    } catch (err) {
+      console.error(`❌ ${company.name}`, err.message);
     }
-    
-    console.log('Job scraping completed');
-  } catch (error) {
-    console.error('Scraping error:', error);
   }
 };
 
 export const expireStaleJobs = async () => {
-  try {
-    const result = await query(
-      'UPDATE jobs SET status = \'inactive\' WHERE created_at < NOW() - INTERVAL \'30 days\' AND status = \'active\' AND source = $1',
-      [JOB_SOURCES.AGGREGATED]
-    );
-    
-    console.log(`Expired ${result.rowCount} stale jobs`);
-  } catch (error) {
-    console.error('Error expiring jobs:', error);
-  }
+  await query(
+    `
+    UPDATE jobs
+    SET status = 'inactive'
+    WHERE source = $1
+      AND updated_at < NOW() - INTERVAL '7 days'
+    `,
+    [JOB_SOURCES.AGGREGATED]
+  );
 };

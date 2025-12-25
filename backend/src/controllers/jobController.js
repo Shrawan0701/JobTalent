@@ -42,41 +42,53 @@ export const createJob = async (req, res, next) => {
 
 export const getJobs = async (req, res, next) => {
   try {
-    const { location, skills, page = 1, limit = PAGINATION.DEFAULT_LIMIT, source } = req.query;
+    const { location, page = 1, limit = PAGINATION.DEFAULT_LIMIT, source } = req.query;
     const offset = (page - 1) * limit;
-    
-    let sql = 'SELECT j.*, c.name as company_name, c.logo_url FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.status = \'active\'';
+
+    let sql = `
+      SELECT
+        j.*,
+        COALESCE(c.name, j.company_name) AS company_name,
+        c.logo_url
+      FROM jobs j
+      LEFT JOIN companies c ON j.company_id = c.id
+      WHERE j.status = 'active'
+    `;
     const params = [];
-    
+
     if (location) {
-      sql += ' AND j.location ILIKE $' + (params.length + 1);
-      params.push('%' + location + '%');
+      sql += ` AND j.location ILIKE $${params.length + 1}`;
+      params.push(`%${location}%`);
     }
-    
+
     if (source) {
-      sql += ' AND j.source = $' + (params.length + 1);
+      sql += ` AND j.source = $${params.length + 1}`;
       params.push(source);
     }
-    
-    const countResult = await query('SELECT COUNT(*) as count FROM (' + sql + ') as t', params);
-    
-    sql += ' ORDER BY j.created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
+
+    const countResult = await query(
+      `SELECT COUNT(*) FROM (${sql}) t`,
+      params
+    );
+
+    sql += ` ORDER BY j.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
-    
+
     const result = await query(sql, params);
-    
+
     res.json({
       jobs: result.rows,
       pagination: {
         total: parseInt(countResult.rows[0].count),
-        page: parseInt(page),
-        limit: parseInt(limit)
-      }
+        page: Number(page),
+        limit: Number(limit),
+      },
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 export const getJobById = async (req, res, next) => {
   try {
