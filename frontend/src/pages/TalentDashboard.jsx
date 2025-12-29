@@ -14,6 +14,27 @@ export default function TalentDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('discover');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [filters, setFilters] = useState({
+    jobType: [],
+    experience: [],
+    location: [],
+    datePosted: 'all'
+  });
+
+  const filterOptions = {
+    jobType: ['Full-time', 'Part-time', 'Contract', 'Internship'],
+    experience: ['Entry-level', 'Mid-level', 'Senior', 'Lead'],
+    location: ['Remote', 'On-site', 'Hybrid'],
+    datePosted: [
+      { value: 'all', label: 'All Time' },
+      { value: '24h', label: 'Last 24 hours' },
+      { value: '7d', label: 'Last 7 days' },
+      { value: '30d', label: 'Last 30 days' }
+    ]
+  };
 
   useEffect(() => {
     fetchData();
@@ -38,6 +59,54 @@ export default function TalentDashboard() {
       setLoading(false);
     }
   };
+
+  const handleFilterChange = (category, value) => {
+    setFilters(prev => {
+      if (category === 'datePosted') {
+        return { ...prev, datePosted: value };
+      }
+      
+      const currentValues = prev[category];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues, value];
+      
+      return { ...prev, [category]: newValues };
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      jobType: [],
+      experience: [],
+      location: [],
+      datePosted: 'all'
+    });
+    setSearchQuery('');
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.jobType.length > 0) count += filters.jobType.length;
+    if (filters.experience.length > 0) count += filters.experience.length;
+    if (filters.location.length > 0) count += filters.location.length;
+    if (filters.datePosted !== 'all') count += 1;
+    return count;
+  };
+
+  const filteredJobs = jobs.filter(job => {
+    const matchesSearch = job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         job.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         job.location?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesJobType = filters.jobType.length === 0 || filters.jobType.includes(job.type);
+    const matchesExperience = filters.experience.length === 0 || filters.experience.includes(job.experience);
+    const matchesLocation = filters.location.length === 0 || 
+                           (filters.location.includes('Remote') && job.location === 'Remote') ||
+                           (filters.location.includes('On-site') && job.location !== 'Remote');
+    
+    return matchesSearch && matchesJobType && matchesExperience && matchesLocation;
+  });
 
   const handleApply = async (jobId) => {
     try {
@@ -69,7 +138,7 @@ export default function TalentDashboard() {
                 <path d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M16 21V5C16 4.46957 15.7893 3.96086 15.4142 3.58579C15.0391 3.21071 14.5304 3 14 3H10C9.46957 3 8.96086 3.21071 8.58579 3.58579C8.21071 3.96086 8 4.46957 8 5V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="brand-text">JobTalent</span>
+              <span className="brand-text">Curson</span>
             </div>
 
             {/* RIGHT NAV */}
@@ -82,6 +151,9 @@ export default function TalentDashboard() {
                   <path d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span>Applications</span>
+                {applications.length > 0 && (
+                  <span className="applications-count">{applications.length}</span>
+                )}
               </button>
 
               <div className="profile-dropdown">
@@ -141,8 +213,131 @@ export default function TalentDashboard() {
                   <p className="section-subtitle">Find your next career move from top companies</p>
                 </div>
                 <div className="header-stats">
-                  <span className="stat-badge">{jobs.length} Positions</span>
+                  <span className="stat-badge">{filteredJobs.length} Positions</span>
                 </div>
+              </div>
+
+              {/* Search and Filter Section */}
+              <div className="search-filter-container">
+                <div className="search-filter-wrapper">
+                  <div className="search-bar-wrapper">
+                    <svg className="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Search jobs, companies, or keywords..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="search-input"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="filter-toggle-btn"
+                  >
+                    <svg className="filter-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Filters</span>
+                    {getActiveFilterCount() > 0 && (
+                      <span className="filter-count-badge">{getActiveFilterCount()}</span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Filter Panel */}
+                {showFilters && (
+                  <div className="filter-panel">
+                    <div className="filter-panel-header">
+                      <h3 className="filter-panel-title">Filter Options</h3>
+                      {getActiveFilterCount() > 0 && (
+                        <button onClick={clearFilters} className="clear-filters-btn">
+                          <svg className="clear-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="filter-grid">
+                      {/* Job Type */}
+                      <div className="filter-group">
+                        <label className="filter-group-label">Job Type</label>
+                        <div className="filter-options">
+                          {filterOptions.jobType.map(type => (
+                            <label key={type} className="filter-option">
+                              <input
+                                type="checkbox"
+                                checked={filters.jobType.includes(type)}
+                                onChange={() => handleFilterChange('jobType', type)}
+                                className="filter-checkbox"
+                              />
+                              <span className="filter-option-label">{type}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Experience Level */}
+                      <div className="filter-group">
+                        <label className="filter-group-label">Experience</label>
+                        <div className="filter-options">
+                          {filterOptions.experience.map(level => (
+                            <label key={level} className="filter-option">
+                              <input
+                                type="checkbox"
+                                checked={filters.experience.includes(level)}
+                                onChange={() => handleFilterChange('experience', level)}
+                                className="filter-checkbox"
+                              />
+                              <span className="filter-option-label">{level}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      <div className="filter-group">
+                        <label className="filter-group-label">Location</label>
+                        <div className="filter-options">
+                          {filterOptions.location.map(loc => (
+                            <label key={loc} className="filter-option">
+                              <input
+                                type="checkbox"
+                                checked={filters.location.includes(loc)}
+                                onChange={() => handleFilterChange('location', loc)}
+                                className="filter-checkbox"
+                              />
+                              <span className="filter-option-label">{loc}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Date Posted */}
+                      <div className="filter-group">
+                        <label className="filter-group-label">Date Posted</label>
+                        <div className="filter-options">
+                          {filterOptions.datePosted.map(option => (
+                            <label key={option.value} className="filter-option">
+                              <input
+                                type="radio"
+                                name="datePosted"
+                                checked={filters.datePosted === option.value}
+                                onChange={() => handleFilterChange('datePosted', option.value)}
+                                className="filter-radio"
+                              />
+                              <span className="filter-option-label">{option.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {loading ? (
@@ -150,17 +345,22 @@ export default function TalentDashboard() {
                   <div className="spinner"></div>
                   <p>Loading opportunities...</p>
                 </div>
-              ) : jobs.length === 0 ? (
+              ) : filteredJobs.length === 0 ? (
                 <div className="empty-state">
                   <svg className="empty-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <h3>No positions available</h3>
-                  <p>Check back soon for new opportunities</p>
+                  <h3>No positions found</h3>
+                  <p>Try adjusting your filters or search criteria</p>
+                  {getActiveFilterCount() > 0 && (
+                    <button onClick={clearFilters} className="empty-state-btn">
+                      Clear Filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="jobs-grid">
-                  {jobs.map((job, index) => (
+                  {filteredJobs.map((job, index) => (
                     <div key={job.id} className="job-card" style={{ animationDelay: `${index * 50}ms` }}>
                       <div className="job-header">
                         <div className="company-avatar">
