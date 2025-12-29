@@ -50,6 +50,7 @@ export default function Landing() {
         </div>
       </section>
 
+      
       {/* ================= STATS ================= */}
       <section className="stats-section">
         <div className="container">
@@ -190,6 +191,121 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ================= HOW IT WORKS ================= */}
+      <section className="how-it-works">
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="section-label">How It Works</span>
+            <h2 className="section-title">Get Started in 3 Simple Steps</h2>
+            <p className="section-subtitle">
+              Whether you're hiring or job hunting, Curson makes it effortless
+            </p>
+          </div>
+
+          <div className="how-grid">
+            <div className="how-card">
+              <div className="how-icon-wrapper">
+                <span className="how-step">01</span>
+              </div>
+              <h5 className="how-title">Create Your Profile</h5>
+              <p className="how-text">
+                Sign up and build a professional profile that highlights your skills or company.
+              </p>
+            </div>
+
+            <div className="how-card">
+              <div className="how-icon-wrapper">
+                <span className="how-step">02</span>
+              </div>
+              <h5 className="how-title">Get Matched</h5>
+              <p className="how-text">
+                Our smart system connects the right talent with the right opportunities.
+              </p>
+            </div>
+
+            <div className="how-card">
+              <div className="how-icon-wrapper">
+                <span className="how-step">03</span>
+              </div>
+              <h5 className="how-title">Grow Faster</h5>
+              <p className="how-text">
+                Apply, hire, communicate, and track progress — all in one platform.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= TESTIMONIALS ================= */}
+      <section className="testimonials-section">
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="section-label">Testimonials</span>
+            <h2 className="section-title">Trusted by Professionals & Companies</h2>
+            <p className="section-subtitle">
+              See what our users have to say about their experience
+            </p>
+          </div>
+
+          <div className="testimonials-grid">
+            <div className="testimonial-card">
+              <div className="testimonial-quote">
+                <svg className="quote-icon" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                </svg>
+              </div>
+              <p className="testimonial-text">
+                Curson helped us hire quality engineers 3x faster than traditional job portals. The candidate quality is exceptional.
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">HM</div>
+                <div>
+                  <h6 className="author-name">Sarah Mitchell</h6>
+                  <p className="author-title">HR Manager, Tech Startup</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-quote">
+                <svg className="quote-icon" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                </svg>
+              </div>
+              <p className="testimonial-text">
+                The profile visibility and verification badges made a real difference. I landed my dream job within 2 weeks!
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">RK</div>
+                <div>
+                  <h6 className="author-name">Raj Kumar</h6>
+                  <p className="author-title">Frontend Developer</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-quote">
+                <svg className="quote-icon" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                </svg>
+              </div>
+              <p className="testimonial-text">
+                Clean UI, great experience, and very easy to manage candidates. Best hiring platform we've used so far.
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">JD</div>
+                <div>
+                  <h6 className="author-name">Jessica Davis</h6>
+                  <p className="author-title">Founder, SaaS Company</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
       {/* ================= PRICING ================= */}
       <section className="pricing-section">
         <div className="container">
@@ -257,6 +373,96 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ================= FAQ ================= */}
+      <section className="faq-section">
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="section-label">FAQ</span>
+            <h2 className="section-title">Frequently Asked Questions</h2>
+            <p className="section-subtitle">
+              Everything you need to know about Curson
+            </p>
+          </div>
+
+          <div className="faq-container">
+            <div className="faq-list">
+              <details className="faq-item">
+                <summary className="faq-question">
+                  Is Curson free to use?
+                  <svg className="faq-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="faq-answer">
+                  Yes, both talent and employers can get started for free. We also offer premium plans with additional features for those who want to unlock the full potential of the platform.
+                </p>
+              </details>
+
+              <details className="faq-item">
+                <summary className="faq-question">
+                  How are candidates verified?
+                  <svg className="faq-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="faq-answer">
+                  Through comprehensive skill assessments, profile checks, identity verification, and optional verification badges. Employers can trust that verified candidates have been thoroughly vetted.
+                </p>
+              </details>
+
+              <details className="faq-item">
+                <summary className="faq-question">
+                  Can startups hire on Curson?
+                  <svg className="faq-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="faq-answer">
+                  Absolutely! Curson is built for startups, enterprises, and agencies of all sizes. We offer flexible pricing and features that scale with your hiring needs.
+                </p>
+              </details>
+
+              <details className="faq-item">
+                <summary className="faq-question">
+                  Is Curson available globally?
+                  <svg className="faq-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="faq-answer">
+                  Yes, we support global hiring and remote opportunities. Connect with talent and employers from around the world, all in one platform.
+                </p>
+              </details>
+
+              <details className="faq-item">
+                <summary className="faq-question">
+                  How long does it take to get hired?
+                  <svg className="faq-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="faq-answer">
+                  On average, candidates with complete profiles and verified skills get interview requests within 1-2 weeks. Premium members often see even faster results with priority visibility.
+                </p>
+              </details>
+
+              <details className="faq-item">
+                <summary className="faq-question">
+                  What payment methods do you accept?
+                  <svg className="faq-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="faq-answer">
+                  We accept all major credit cards, debit cards, UPI, and net banking. All payments are processed securely through our encrypted payment gateway.
+                </p>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
       {/* ================= CTA ================= */}
       <section className="cta-section">
         <div className="container">
