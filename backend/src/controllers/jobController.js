@@ -42,8 +42,7 @@ export const createJob = async (req, res, next) => {
 
 export const getJobs = async (req, res, next) => {
   try {
-    const { location, page = 1, limit = PAGINATION.DEFAULT_LIMIT, source } = req.query;
-    const offset = (page - 1) * limit;
+    const { location, source } = req.query;
 
     let sql = `
       SELECT
@@ -66,28 +65,19 @@ export const getJobs = async (req, res, next) => {
       params.push(source);
     }
 
-    const countResult = await query(
-      `SELECT COUNT(*) FROM (${sql}) t`,
-      params
-    );
-
-    sql += ` ORDER BY j.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(limit, offset);
+    sql += ` ORDER BY j.created_at DESC`;
 
     const result = await query(sql, params);
 
     res.json({
       jobs: result.rows,
-      pagination: {
-        total: parseInt(countResult.rows[0].count),
-        page: Number(page),
-        limit: Number(limit),
-      },
+      total: result.rows.length,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 
 export const getJobById = async (req, res, next) => {

@@ -1,16 +1,23 @@
-export const normalizeGreenhouseJob = (ghJob, company) => {
+import { htmlToText } from 'html-to-text';
+
+export const normalizeGreenhouseJob = (job, company) => {
+  const raw = job.content?.trim();
+
+  const description =
+    raw && raw.length > 50
+      ? htmlToText(raw, { wordwrap: 120 })
+      : null;
+
   return {
-    title: ghJob.title,
-    description:
-      ghJob.content ||
-      ghJob.description ||
-      'Job description not provided by employer.',
-    location: ghJob.location?.name || 'Remote',
-    jobType: ghJob.metadata?.find(m => m.name === 'Employment Type')?.value || null,
+    title: job.title,
+    description,
+    location: job.location?.name || 'Remote',
+    jobType:
+      job.metadata?.find(m => m.name === 'Employment Type')?.value || null,
     source: 'aggregated',
-    sourceJobId: `${company.name}-${ghJob.id}`,
+    sourceJobId: `${company.name}-${job.id}`,
     companyName: company.name,
     companyWebsite: company.website,
-    applyUrl: ghJob.absolute_url,
+    applyUrl: job.absolute_url,
   };
 };

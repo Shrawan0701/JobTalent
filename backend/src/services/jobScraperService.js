@@ -4,6 +4,11 @@ import { fetchGreenhouseJobs } from './greenhouseService.js';
 import { normalizeGreenhouseJob } from './jobNormalizer.js';
 import { upsertAggregatedJob } from './jobRepository.js';
 import { query } from '../config/database.js';
+import { LEVER_COMPANIES } from '../config/lever.js';
+import { fetchLeverJobs } from './leverService.js';
+import { normalizeLeverJob } from './leverNormalizer.js';
+import { fetchGreenhouseJobDetail } from './greenhouseService.js';
+
 
 export const scrapeJobs = async () => {
   console.log('🔄 Greenhouse scraping started');
@@ -13,8 +18,40 @@ export const scrapeJobs = async () => {
       const jobs = await fetchGreenhouseJobs(company.boardToken);
 
       for (const ghJob of jobs) {
-        const job = normalizeGreenhouseJob(ghJob, company);
+        // 🔥 NEW: fetch full job detail
+        const detail = await fetchGreenhouseJobDetail(
+          company.boardToken,
+          ghJob.id
+        );
+
+        const job = normalizeGreenhouseJob(
+          {
+            ...ghJob,
+            content: detail.content, // FULL DESCRIPTION
+          },
+          company
+        );
+
         await upsertAggregatedJob(job);
+      }
+
+      console.log(`✅ ${company.name}: ${jobs.length} jobs`);
+    } catch (err) {
+      console.error(`❌ ${company.name}`, err.message);
+    }
+  }
+};
+
+export const scrapeLeverJobs = async () => {
+  console.log('🔄 Lever scraping started');
+
+  for (const company of LEVER_COMPANIES) {
+    try {
+      const jobs = await fetchLeverJobs(company.slug);
+
+      for (const job of jobs) {
+        const normalized = normalizeLeverJob(job, company);
+        await upsertAggregatedJob(normalized);
       }
 
       console.log(`✅ ${company.name}: ${jobs.length} jobs`);
