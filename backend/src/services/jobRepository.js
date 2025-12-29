@@ -1,8 +1,7 @@
 import { query } from '../config/database.js';
 
 export const upsertAggregatedJob = async (job) => {
-  await query(
-    `
+  const sql = `
     INSERT INTO jobs (
       title,
       description,
@@ -12,32 +11,37 @@ export const upsertAggregatedJob = async (job) => {
       source_job_id,
       company_name,
       company_website,
-      apply_url,
+      external_url,
       status,
       created_at,
       updated_at
     )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'active',NOW(),NOW())
-    ON CONFLICT (source, source_job_id)
+    VALUES (
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,'active',NOW(),NOW()
+    )
+    ON CONFLICT (source_job_id)
     DO UPDATE SET
       title = EXCLUDED.title,
       description = EXCLUDED.description,
       location = EXCLUDED.location,
       job_type = EXCLUDED.job_type,
-      apply_url = EXCLUDED.apply_url,
-      updated_at = NOW(),
-      status = 'active'
-    `,
-    [
-      job.title,
-      job.description,
-      job.location,
-      job.jobType,
-      job.source,
-      job.sourceJobId,
-      job.companyName,
-      job.companyWebsite,
-      job.applyUrl,
-    ]
-  );
+      company_name = EXCLUDED.company_name,
+      company_website = EXCLUDED.company_website,
+      external_url = EXCLUDED.external_url,
+      updated_at = NOW();
+  `;
+
+  const values = [
+    job.title,
+    job.description,
+    job.location,
+    job.job_type,
+    job.source,
+    job.source_job_id,
+    job.company_name,
+    job.company_website,
+    job.external_url,
+  ];
+
+  await query(sql, values);
 };

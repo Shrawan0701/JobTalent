@@ -1,6 +1,20 @@
 import { query } from '../config/database.js';
 import { JOB_SOURCES, PAGINATION } from '../config/constants.js';
 
+const normalizeArray = (val) => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return String(val).split(',');
+};
+const JOB_TYPE_MAP = {
+  'full-time': ['regular', 'full time', 'permanent'],
+  'internship': ['intern', 'internship'],
+  'contract': ['contract'],
+  'part-time': ['part time', 'part-time']
+};
+
+
+
 export const createJob = async (req, res, next) => {
   try {
     const { title, description, location, salary, skills, jobType } = req.body;
@@ -40,43 +54,93 @@ export const createJob = async (req, res, next) => {
   }
 };
 
-export const getJobs = async (req, res, next) => {
-  try {
-    const { location, source } = req.query;
+export const getJobs = async (req, res) => {
+  const {
+    page = 1,
+    limit = 20,
+    search,
+    jobType,
+    location,
+    datePosted
+  } = req.query;
 
-    let sql = `
-      SELECT
-        j.*,
-        COALESCE(c.name, j.company_name) AS company_name,
-        c.logo_url
-      FROM jobs j
-      LEFT JOIN companies c ON j.company_id = c.id
-      WHERE j.status = 'active'
+  const jobTypes = normalizeArray(jobType);
+  const locations = normalizeArray(location);
+
+  const values = [];
+  let where = `WHERE status = 'active'`;
+
+  if (search) {
+    values.push(`%${search}%`);
+    where += `
+      AND (
+        title ILIKE $${values.length}
+        OR company_name ILIKE $${values.length}
+        OR location ILIKE $${values.length}
+      )
     `;
-    const params = [];
-
-    if (location) {
-      sql += ` AND j.location ILIKE $${params.length + 1}`;
-      params.push(`%${location}%`);
-    }
-
-    if (source) {
-      sql += ` AND j.source = $${params.length + 1}`;
-      params.push(source);
-    }
-
-    sql += ` ORDER BY j.created_at DESC`;
-
-    const result = await query(sql, params);
-
-    res.json({
-      jobs: result.rows,
-      total: result.rows.length,
-    });
-  } catch (error) {
-    next(error);
   }
+
+  if (jobTypes.length) {
+  const normalized = jobTypes.map(t => t.toLowerCase());
+
+  const mappedTypes = normalized.flatMap(t => JOB_TYPE_MAP[t] || []);
+
+  if (mappedTypes.length) {
+    values.push(mappedTypes);
+    where += `
+      AND LOWER(job_type) = ANY($${values.length})
+    `;
+  }
+}
+
+
+  if (locations.length) {
+  const clauses = [];
+
+  locations.forEach(loc => {
+    if (loc === 'Remote') {
+      clauses.push(`location ILIKE '%remote%'`);
+    }
+    if (loc === 'On-site') {
+      clauses.push(`location NOT ILIKE '%remote%'`);
+    }
+    if (loc === 'Hybrid') {
+      clauses.push(`location ILIKE '%hybrid%'`);
+    }
+  });
+
+  if (clauses.length) {
+    where += ` AND (${clauses.join(' OR ')})`;
+  }
+}
+
+
+  if (datePosted) {
+    const map = { '24h': '1 day', '7d': '7 days', '30d': '30 days' };
+    if (map[datePosted]) {
+      where += ` AND created_at >= NOW() - INTERVAL '${map[datePosted]}'`;
+    }
+  }
+
+  values.push(limit);
+  values.push((page - 1) * limit);
+
+  const sql = `
+    SELECT *
+    FROM jobs
+    ${where}
+    ORDER BY created_at DESC
+    LIMIT $${values.length - 1}
+    OFFSET $${values.length}
+  `;
+
+  const result = await query(sql, values);
+  res.json({ jobs: result.rows });
 };
+
+
+
 
 
 

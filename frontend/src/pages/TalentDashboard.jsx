@@ -16,6 +16,17 @@ export default function TalentDashboard() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+const [hasMore, setHasMore] = useState(true);
+const JOBS_PER_PAGE = 20;
+
+const stripHtml = (html = '') => {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
+};
+
+
   
   const [filters, setFilters] = useState({
     jobType: [],
@@ -25,40 +36,75 @@ export default function TalentDashboard() {
   });
 
   const filterOptions = {
-    jobType: ['Full-time', 'Part-time', 'Contract', 'Internship'],
-    experience: ['Entry-level', 'Mid-level', 'Senior', 'Lead'],
-    location: ['Remote', 'On-site', 'Hybrid'],
-    datePosted: [
-      { value: 'all', label: 'All Time' },
-      { value: '24h', label: 'Last 24 hours' },
-      { value: '7d', label: 'Last 7 days' },
-      { value: '30d', label: 'Last 30 days' }
-    ]
-  };
+  jobType: [
+    { label: 'Full-time', value: 'full-time' },
+    { label: 'Part-time', value: 'part-time' },
+    { label: 'Contract', value: 'contract' },
+    { label: 'Internship', value: 'internship' }
+  ],
+  experience: ['Entry-level', 'Mid-level', 'Senior', 'Lead'],
+  location: ['Remote', 'On-site', 'Hybrid'],
+  datePosted: [
+    { value: 'all', label: 'All Time' },
+    { value: '24h', label: 'Last 24 hours' },
+    { value: '7d', label: 'Last 7 days' },
+    { value: '30d', label: 'Last 30 days' }
+  ]
+};
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+const fetchJobs = async (pageNo = 1) => {
+  try {
+    setLoading(true);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
+    const res = await jobService.getJobs({
+      page: pageNo,
+      limit: JOBS_PER_PAGE,
+      search: searchQuery || undefined,
+      jobType: filters.jobType.length ? filters.jobType : undefined,
+      location: filters.location.length ? filters.location : undefined,
+      datePosted: filters.datePosted !== 'all' ? filters.datePosted : undefined
+    });
 
-      if (activeTab === 'discover') {
-        const res = await jobService.getJobs({});
-        setJobs(res.jobs || []);
-      }
+    setJobs(prev =>
+      pageNo === 1 ? res.jobs : [...prev, ...res.jobs]
+    );
 
-      if (activeTab === 'applications') {
-        const res = await applicationService.getMyApplications();
-        setApplications(res.applications || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setHasMore(res.jobs.length === JOBS_PER_PAGE);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+useEffect(() => {
+  if (activeTab === 'discover') {
+    setPage(1);
+    fetchJobs(1);
+  }
+}, [activeTab,searchQuery, filters]);
+
+
+
+ 
+
+ // 🔥 DEFINE THIS AT TOP LEVEL (after useState hooks)
+
+
+
+const fetchApplications = async () => {
+  try {
+    setLoading(true);
+    const res = await applicationService.getMyApplications();
+    setApplications(res.applications || []);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleFilterChange = (category, value) => {
     setFilters(prev => {
@@ -94,29 +140,33 @@ export default function TalentDashboard() {
     return count;
   };
 
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.location?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesJobType = filters.jobType.length === 0 || filters.jobType.includes(job.type);
-    const matchesExperience = filters.experience.length === 0 || filters.experience.includes(job.experience);
-    const matchesLocation = filters.location.length === 0 || 
-                           (filters.location.includes('Remote') && job.location === 'Remote') ||
-                           (filters.location.includes('On-site') && job.location !== 'Remote');
-    
-    return matchesSearch && matchesJobType && matchesExperience && matchesLocation;
-  });
 
-  const handleApply = async (jobId) => {
-    try {
-      await applicationService.applyToJob(jobId);
-      alert('Applied successfully!');
-      fetchData();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to apply');
+
+
+ const handleApply = (job) => {
+  // 🔥 Aggregated jobs → redirect
+  if (job.source === 'aggregated') {
+    if (!job.external_url) {
+      alert('Apply link not available');
+      return;
     }
-  };
+
+    window.open(job.external_url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+
+  // 🔥 Direct jobs → internal apply
+  applicationService
+    .applyToJob(job.id)
+    .then(() => {
+      alert('Applied successfully!');
+      fetchApplications();
+    })
+    .catch(err => {
+      alert(err.response?.data?.message || 'Failed to apply');
+    });
+};
+
 
   const handleLogout = () => {
     logout();
@@ -213,7 +263,7 @@ export default function TalentDashboard() {
                   <p className="section-subtitle">Find your next career move from top companies</p>
                 </div>
                 <div className="header-stats">
-                  <span className="stat-badge">{filteredJobs.length} Positions</span>
+                  <span className="stat-badge">{jobs.length} Positions</span>
                 </div>
               </div>
 
@@ -267,17 +317,18 @@ export default function TalentDashboard() {
                       <div className="filter-group">
                         <label className="filter-group-label">Job Type</label>
                         <div className="filter-options">
-                          {filterOptions.jobType.map(type => (
-                            <label key={type} className="filter-option">
-                              <input
-                                type="checkbox"
-                                checked={filters.jobType.includes(type)}
-                                onChange={() => handleFilterChange('jobType', type)}
-                                className="filter-checkbox"
-                              />
-                              <span className="filter-option-label">{type}</span>
-                            </label>
-                          ))}
+                          {filterOptions.jobType.map(opt => (
+  <label key={opt.value} className="filter-option">
+    <input
+      type="checkbox"
+      checked={filters.jobType.includes(opt.value)}
+      onChange={() => handleFilterChange('jobType', opt.value)}
+      className="filter-checkbox"
+    />
+    <span className="filter-option-label">{opt.label}</span>
+  </label>
+))}
+
                         </div>
                       </div>
 
@@ -345,7 +396,7 @@ export default function TalentDashboard() {
                   <div className="spinner"></div>
                   <p>Loading opportunities...</p>
                 </div>
-              ) : filteredJobs.length === 0 ? (
+              ) : jobs.length === 0 ? (
                 <div className="empty-state">
                   <svg className="empty-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -360,7 +411,7 @@ export default function TalentDashboard() {
                 </div>
               ) : (
                 <div className="jobs-grid">
-                  {filteredJobs.map((job, index) => (
+                  {jobs.map((job, index) => (
                     <div key={job.id} className="job-card" style={{ animationDelay: `${index * 50}ms` }}>
                       <div className="job-header">
                         <div className="company-avatar">
@@ -390,24 +441,47 @@ export default function TalentDashboard() {
                         )}
                       </div>
 
-                      {job.description && (
-                        <p className="job-description">
-                          {job.description.substring(0, 120)}...
-                        </p>
-                      )}
+                      +{job.description && (
+  <p className="job-description">
+    {stripHtml(job.description).substring(0, 120)}...
+  </p>
+)}
+
 
                       <button
                         className="apply-btn"
-                        onClick={() => handleApply(job.id)}
+                        onClick={() => handleApply(job)}
                       >
                         Apply Now
                         <svg className="btn-arrow" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                       </button>
+
+                      
                     </div>
+                    
                   ))}
+                {hasMore && (
+  <div className="load-more-container">
+    <button
+      className="load-more-btn"
+      disabled={loading}
+      onClick={() => {
+        const next = page + 1;
+        setPage(next);
+        fetchJobs(next);
+      }}
+    >
+      {loading ? "Loading..." : "Load more"}
+    </button>
+  </div>
+)}
+
+      
+
                 </div>
+                
               )}
             </div>
           )}

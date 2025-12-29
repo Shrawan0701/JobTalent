@@ -1450,3 +1450,33 @@ body {
   background: white;
   border: 1px solid var(--color-slate-200);
   border-radius:}
+
+ .load-more-container {
+  grid-column: 1 / -1; /* spans full grid */
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 32px;
+}
+
+.load-more-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.load-more-btn:hover {
+  background: #020617;
+  transform: translateY(-1px);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

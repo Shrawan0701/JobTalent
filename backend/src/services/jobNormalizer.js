@@ -1,23 +1,27 @@
 import { htmlToText } from 'html-to-text';
 
 export const normalizeGreenhouseJob = (job, company) => {
-  const raw = job.content?.trim();
-
-  const description =
-    raw && raw.length > 50
-      ? htmlToText(raw, { wordwrap: 120 })
-      : null;
-
   return {
     title: job.title,
-    description,
+
+    description: job.content
+      ? htmlToText(job.content, { wordwrap: 120 })
+      : 'Job description not provided',
+
     location: job.location?.name || 'Remote',
-    jobType:
+
+    job_type:
       job.metadata?.find(m => m.name === 'Employment Type')?.value || null,
+
     source: 'aggregated',
-    sourceJobId: `${company.name}-${job.id}`,
-    companyName: company.name,
-    companyWebsite: company.website,
-    applyUrl: job.absolute_url,
+
+    source_job_id: `${company.boardToken}-${job.id}`,
+
+    company_name: company.name,
+    company_website: company.website,
+
+    external_url:
+      job.absolute_url || `https://boards.greenhouse.io/${company.boardToken}`,
   };
 };
+

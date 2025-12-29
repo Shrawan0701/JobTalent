@@ -27,7 +27,8 @@ export const scrapeJobs = async () => {
         const job = normalizeGreenhouseJob(
           {
             ...ghJob,
-            content: detail.content, // FULL DESCRIPTION
+            content: detail.content,
+            absolute_url: detail.absolute_url, // FULL DESCRIPTION
           },
           company
         );
