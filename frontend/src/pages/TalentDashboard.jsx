@@ -5,9 +5,13 @@ import * as applicationService from '../services/applicationService.js';
 import '../assets/css/dashboard.css';
 import { Link, useNavigate } from 'react-router-dom';
 
+
 export default function TalentDashboard() {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const [pendingApply, setPendingApply] = useState(null);
+
 
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -85,6 +89,37 @@ useEffect(() => {
   }
 }, [activeTab,searchQuery, filters]);
 
+useEffect(() => {
+  const pending = localStorage.getItem('pendingExternalApply');
+  if (pending) {
+    setPendingApply(JSON.parse(pending));
+  }
+}, []);
+
+useEffect(() => {
+  const checkPendingApply = () => {
+    const pending = localStorage.getItem('pendingExternalApply');
+    if (pending) {
+      setPendingApply(JSON.parse(pending));
+    }
+  };
+
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      checkPendingApply();
+    }
+  };
+
+  window.addEventListener('focus', checkPendingApply);
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
+  return () => {
+    window.removeEventListener('focus', checkPendingApply);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+  };
+}, []);
+
+
 
 
  
@@ -143,19 +178,28 @@ const fetchApplications = async () => {
 
 
 
- const handleApply = (job) => {
-  // 🔥 Aggregated jobs → redirect
+const handleApply = (job) => {
+  // 🔥 Aggregated jobs
   if (job.source === 'aggregated') {
     if (!job.external_url) {
       alert('Apply link not available');
       return;
     }
 
+    localStorage.setItem(
+      'pendingExternalApply',
+      JSON.stringify({
+        jobId: job.id,
+        title: job.title,
+        company: job.company_name
+      })
+    );
+
     window.open(job.external_url, '_blank', 'noopener,noreferrer');
     return;
   }
 
-  // 🔥 Direct jobs → internal apply
+  // Direct jobs
   applicationService
     .applyToJob(job.id)
     .then(() => {
@@ -166,6 +210,12 @@ const fetchApplications = async () => {
       alert(err.response?.data?.message || 'Failed to apply');
     });
 };
+
+useEffect(() => {
+  fetchApplications();
+}, []);
+
+
 
 
   const handleLogout = () => {
@@ -556,6 +606,48 @@ const fetchApplications = async () => {
           )}
         </div>
       </main>
+      {pendingApply && activeTab === 'discover' && (
+  <div className="confirm-overlay">
+    <div className="confirm-modal">
+      <h3>Did you apply for this job?</h3>
+      <p>
+        {pendingApply.title} at {pendingApply.company}
+      </p>
+
+      <div className="confirm-actions">
+      <button
+  className="btn-primary"
+  onClick={async () => {
+    await applicationService.confirmExternalApply(pendingApply.jobId);
+
+    setJobs(prev =>
+      prev.filter(job => job.id !== pendingApply.jobId)
+    );
+
+    localStorage.removeItem('pendingExternalApply');
+    setPendingApply(null);
+    fetchApplications();
+  }}
+>
+  Yes, I applied
+</button>
+
+
+
+        <button
+          className="btn-secondary"
+          onClick={() => {
+            localStorage.removeItem('pendingExternalApply');
+            setPendingApply(null);
+          }}
+        >
+          No
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

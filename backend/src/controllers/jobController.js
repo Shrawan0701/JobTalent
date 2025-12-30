@@ -90,6 +90,8 @@ export const getFeedJobs = async (req, res, next) => {
    JOB LIST + FILTERS
 ========================= */
 export const getJobs = async (req, res) => {
+  const userId = req.user?.id || null;
+
   const {
     page = 1,
     limit = 20,
@@ -100,54 +102,45 @@ export const getJobs = async (req, res) => {
   } = req.query;
 
   const values = [];
-  let where = `WHERE status = 'active'`;
+  let where = `WHERE j.status = 'active'`;
 
   /* 🔍 SEARCH */
   if (search) {
     values.push(`%${search}%`);
     where += `
       AND (
-        title ILIKE $${values.length}
-        OR company_name ILIKE $${values.length}
-        OR location ILIKE $${values.length}
+        j.title ILIKE $${values.length}
+        OR j.company_name ILIKE $${values.length}
+        OR j.location ILIKE $${values.length}
       )
     `;
   }
 
-  /* ✅ JOB TYPE (FIXED + NORMALIZED) */
+  /* ✅ JOB TYPE */
   const requestedTypes = Array.isArray(jobType)
     ? jobType
-    : jobType
-    ? [jobType]
-    : [];
+    : jobType ? [jobType] : [];
 
   if (requestedTypes.length) {
-    const mappedTypes = requestedTypes.flatMap(
-      t => JOB_TYPE_MAP[t] || []
-    );
-
+    const mappedTypes = requestedTypes.flatMap(t => JOB_TYPE_MAP[t] || []);
     if (mappedTypes.length) {
       values.push(mappedTypes.map(t => t.toLowerCase()));
-      where += ` AND LOWER(job_type) = ANY($${values.length})`;
+      where += ` AND LOWER(j.job_type) = ANY($${values.length})`;
     }
   }
 
   /* ✅ LOCATION */
   const locations = Array.isArray(location)
     ? location
-    : location
-    ? [location]
-    : [];
+    : location ? [location] : [];
 
   if (locations.length) {
     const clauses = [];
-
     locations.forEach(loc => {
-      if (loc === 'Remote') clauses.push(`location ILIKE '%remote%'`);
-      if (loc === 'On-site') clauses.push(`location NOT ILIKE '%remote%'`);
-      if (loc === 'Hybrid') clauses.push(`location ILIKE '%hybrid%'`);
+      if (loc === 'Remote') clauses.push(`j.location ILIKE '%remote%'`);
+      if (loc === 'On-site') clauses.push(`j.location NOT ILIKE '%remote%'`);
+      if (loc === 'Hybrid') clauses.push(`j.location ILIKE '%hybrid%'`);
     });
-
     if (clauses.length) {
       where += ` AND (${clauses.join(' OR ')})`;
     }
@@ -155,44 +148,50 @@ export const getJobs = async (req, res) => {
 
   /* ✅ DATE POSTED */
   if (datePosted && datePosted !== 'all') {
-    const map = {
-      '24h': '1 day',
-      '7d': '7 days',
-      '30d': '30 days'
-    };
-
+    const map = { '24h': '1 day', '7d': '7 days', '30d': '30 days' };
     if (map[datePosted]) {
-      where += ` AND created_at >= NOW() - INTERVAL '${map[datePosted]}'`;
+      where += ` AND j.created_at >= NOW() - INTERVAL '${map[datePosted]}'`;
     }
+  }
+
+  /* ✅ EXCLUDE APPLIED JOBS (PER USER ONLY) */
+  if (userId) {
+    values.push(userId);
+    where += `
+      AND NOT EXISTS (
+        SELECT 1
+        FROM applications a
+        WHERE a.job_id = j.id
+        AND a.user_id = $${values.length}
+      )
+    `;
   }
 
   /* ✅ PAGINATION */
   values.push(limit);
   values.push((page - 1) * limit);
 
- const sql = `
-  SELECT *
-  FROM (
-    SELECT
-      j.*,
-      ROW_NUMBER() OVER (
-        PARTITION BY company_name
-        ORDER BY created_at DESC
-      ) AS company_rank
-    FROM jobs j
-    ${where}
-  ) ranked
-  ORDER BY
-    company_rank ASC,
-    created_at DESC
-  LIMIT $${values.length - 1}
-  OFFSET $${values.length}
-`;
-
+  const sql = `
+    SELECT *
+    FROM (
+      SELECT
+        j.*,
+        ROW_NUMBER() OVER (
+          PARTITION BY j.company_name
+          ORDER BY j.created_at DESC
+        ) AS company_rank
+      FROM jobs j
+      ${where}
+    ) ranked
+    ORDER BY company_rank ASC, created_at DESC
+    LIMIT $${values.length - 1}
+    OFFSET $${values.length}
+  `;
 
   const result = await query(sql, values);
   res.json({ jobs: result.rows });
 };
+
 
 /* =========================
    JOB DETAIL

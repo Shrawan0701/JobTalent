@@ -19,3 +19,9 @@ export const updateApplicationStatus = async (applicationId, status) => {
   const response = await api.put(`/applications/${applicationId}`, { status });
   return response.data;
 };
+
+// 🔥 NEW
+export const confirmExternalApply = async (jobId) => {
+  const response = await api.post('/applications/external-confirm', { jobId });
+  return response.data;
+};

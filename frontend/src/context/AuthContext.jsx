@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import * as authService from '../services/authService.js';
 import jwtDecode from 'jwt-decode';
+import * as authService from '../services/authService.js';
 
 export const AuthContext = createContext();
 
@@ -9,21 +9,38 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore auth on refresh
+  /* ===============================
+     RESTORE SESSION (JWT ONLY)
+  =============================== */
   useEffect(() => {
     const savedToken = localStorage.getItem('auth_token');
-    const savedUser = localStorage.getItem('user');
 
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    if (savedToken) {
+      try {
+        const decoded = jwtDecode(savedToken);
+
+        setToken(savedToken);
+        setUser({
+          id: decoded.userId,
+          email: decoded.email,
+          role: decoded.role,
+        });
+      } catch (err) {
+        // invalid / expired token
+        localStorage.removeItem('auth_token');
+      }
     }
 
     setLoading(false);
   }, []);
 
-  // Email/password signup
+  /* ===============================
+     SIGNUP
+  =============================== */
   const signup = async (email, password, role, firstName, lastName) => {
+    // clear old session
+    localStorage.clear();
+
     const data = await authService.signup(
       email,
       password,
@@ -33,47 +50,64 @@ export const AuthProvider = ({ children }) => {
     );
 
     localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+
+    const decoded = jwtDecode(data.token);
 
     setToken(data.token);
-    setUser(data.user);
-
-    return data.user;
-  };
-
-  // Email/password login
-  const login = async (email, password) => {
-    const data = await authService.login(email, password);
-
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-
-    setToken(data.token);
-    setUser(data.user);
-
-    return data.user;
-  };
-
-  // 🔥 Google OAuth helper
-  const setUserFromToken = (token) => {
-    const decoded = jwtDecode(token);
-
-    const user = {
+    setUser({
       id: decoded.userId,
       email: decoded.email,
       role: decoded.role,
-    };
+    });
 
-    localStorage.setItem('auth_token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-
-    setToken(token);
-    setUser(user);
+    return decoded;
   };
 
+  /* ===============================
+     LOGIN
+  =============================== */
+  const login = async (email, password) => {
+    // clear old session
+    localStorage.clear();
+
+    const data = await authService.login(email, password);
+
+    localStorage.setItem('auth_token', data.token);
+
+    const decoded = jwtDecode(data.token);
+
+    setToken(data.token);
+    setUser({
+      id: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+    });
+
+    return decoded;
+  };
+
+  /* ===============================
+     GOOGLE OAUTH
+  =============================== */
+  const setUserFromToken = (token) => {
+    localStorage.clear();
+    localStorage.setItem('auth_token', token);
+
+    const decoded = jwtDecode(token);
+
+    setToken(token);
+    setUser({
+      id: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+    });
+  };
+
+  /* ===============================
+     LOGOUT
+  =============================== */
   const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
+    localStorage.clear();
     setToken(null);
     setUser(null);
   };

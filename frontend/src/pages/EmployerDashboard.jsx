@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
 import * as jobService from '../services/jobService.js';
 import * as applicationService from '../services/applicationService.js';
-import '../assets/css/dashboard.css';
+import '../assets/css/employer.css';
 import { useNavigate } from 'react-router-dom';
 
 export default function EmployerDashboard() {
@@ -35,7 +35,7 @@ export default function EmployerDashboard() {
       const response = await jobService.getJobs({ source: 'direct' });
       setJobs(response.jobs || []);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,7 @@ export default function EmployerDashboard() {
       setApplications(response.applications || []);
       setSelectedJobId(jobId);
     } catch (error) {
-      console.error('Error fetching applications:', error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -56,27 +56,18 @@ export default function EmployerDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handlePostJob = async (e) => {
     e.preventDefault();
-
     try {
       await jobService.createJob({
         ...formData,
-        skills: formData.skills
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
+        skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
       });
 
-      alert('Job posted successfully!');
       setShowPostForm(false);
-
       setFormData({
         title: '',
         description: '',
@@ -92,258 +83,185 @@ export default function EmployerDashboard() {
     }
   };
 
-
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
   return (
-    <div className="dashboard-container">
-      {/* NAVBAR */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-        <div className="container">
-          <span className="navbar-brand fw-bold"> JobTalent</span>
-
-          <div className="ms-auto">
-            <span className="me-3 text-muted">{user?.email}</span>
-            <button
-              className="btn btn-outline-danger btn-sm"
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="container py-4">
-        {/* TABS */}
-        <ul className="nav nav-tabs mb-4">
-          <li className="nav-item">
-            <button
-              className={`nav-link ${activeTab === 'jobs' ? 'active' : ''}`}
-              onClick={() => setActiveTab('jobs')}
-            >
-               My Jobs
-            </button>
-          </li>
-
-          <li className="nav-item">
-            <button
-              className={`nav-link ${activeTab === 'applications' ? 'active' : ''}`}
-              onClick={() => setActiveTab('applications')}
-              disabled={!selectedJobId}
-            >
-              Applications
-            </button>
-          </li>
-
-          <li className="nav-item ms-auto">
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => setShowPostForm(!showPostForm)}
-            >
-              ➕ Post Job
-            </button>
-          </li>
-        </ul>
-
-        {/* POST JOB FORM */}
-        {showPostForm && (
-          <div className="card mb-4 p-4">
-            <h4 className="mb-3">Post a New Job</h4>
-
-            <form onSubmit={handlePostJob}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Job Title</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Location</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Salary</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="salary"
-                    value={formData.salary}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Job Type</label>
-                  <select
-                    className="form-select"
-                    name="jobType"
-                    value={formData.jobType}
-                    onChange={handleInputChange}
-                  >
-                    <option value="full-time">Full-time</option>
-                    <option value="part-time">Part-time</option>
-                    <option value="contract">Contract</option>
-                    <option value="freelance">Freelance</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-control"
-                  name="description"
-                  rows="4"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Skills (comma separated)</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleInputChange}
-                  placeholder="React, Node.js, PostgreSQL"
-                />
-              </div>
-
-              <button type="submit" className="btn btn-primary">
-                Post Job
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-secondary ms-2"
-                onClick={() => setShowPostForm(false)}
-              >
-                Cancel
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* JOBS TAB */}
-        {activeTab === 'jobs' && (
-          <>
-            <h2 className="mb-4">My Job Postings</h2>
-
-            {loading ? (
-              <p>Loading...</p>
-            ) : jobs.length === 0 ? (
-              <p className="text-muted">No job postings yet</p>
-            ) : (
-              <div className="row">
-                {jobs.map((job) => (
-                  <div key={job.id} className="col-md-6 mb-4">
-                    <div className="card shadow-sm h-100">
-                      <div className="card-body">
-                        <h5 className="card-title">{job.title}</h5>
-                        <p className="text-muted">{job.location}</p>
-                        <p>{job.salary || 'Salary not mentioned'}</p>
-                        <p className="small">
-                          {job.description?.substring(0, 100)}...
-                        </p>
-
-                        <button
-                          className="btn btn-info btn-sm"
-                          onClick={() => {
-                            setActiveTab('applications');
-                            fetchApplications(job.id);
-                          }}
-                        >
-                          View Applications
-                        </button>
-
-                        <button className="btn btn-danger btn-sm ms-2">
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* APPLICATIONS TAB */}
-        {activeTab === 'applications' && (
-          <>
-            <h2 className="mb-4">Applications</h2>
-
-            {!selectedJobId ? (
-              <p className="text-muted">Select a job to view applications</p>
-            ) : loading ? (
-              <p>Loading...</p>
-            ) : applications.length === 0 ? (
-              <p className="text-muted">No applications yet</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Status</th>
-                      <th>Applied On</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {applications.map((app) => (
-                      <tr key={app.id}>
-                        <td>
-                          {app.first_name} {app.last_name}
-                        </td>
-                        <td>{app.email}</td>
-                        <td>
-                          <span className="badge bg-info">
-                            {app.status}
-                          </span>
-                        </td>
-                        <td>
-                          {new Date(app.created_at).toLocaleDateString()}
-                        </td>
-                        <td>
-                          <button className="btn btn-sm btn-outline-primary">
-                            Review
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
+    // Replace ONLY the className attributes with these:
+<div className="emp-dashboard-premium">
+  {/* NAVBAR */}
+  <header className="emp-header-premium">
+    <div className="emp-header-inner">
+      <div className="emp-logo-premium">Curson</div>
+      <div className="emp-user-section">
+        <div className="emp-avatar">{user?.email?.[0]?.toUpperCase()}</div>
+        <span className="emp-user-email">{user?.email}</span>
+        <button className="emp-logout-text" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
     </div>
+  </header>
+
+  <main className="emp-main-content">
+    {/* TABS */}
+    <div className="emp-tabs-section">
+      <div className="emp-tabs-nav">
+        <button className={`emp-tab-btn ${activeTab === 'jobs' ? 'active' : ''}`} onClick={() => setActiveTab('jobs')}>
+          My Jobs
+        </button>
+        <button className={`emp-tab-btn ${activeTab === 'applications' ? 'active' : ''}`} onClick={() => setActiveTab('applications')} disabled={!selectedJobId}>
+          Applications
+        </button>
+      </div>
+      <button className="emp-post-job-btn" onClick={() => setShowPostForm(!showPostForm)}>
+        + Post Job
+      </button>
+    </div>
+
+    {/* POST JOB FORM */}
+    {showPostForm && (
+      <section className="emp-job-form-card">
+        <div className="emp-form-header">
+          <h3>Create Job Posting</h3>
+          <button className="emp-form-close" onClick={() => setShowPostForm(false)}>×</button>
+        </div>
+        <form onSubmit={handlePostJob}>
+          <div className="emp-form-row">
+            <div className="emp-input-group">
+              <label>Job Title</label>
+              <input name="title" value={formData.title} onChange={handleInputChange} required />
+            </div>
+            <div className="emp-input-group">
+              <label>Location</label>
+              <input name="location" value={formData.location} onChange={handleInputChange} required />
+            </div>
+          </div>
+          <div className="emp-form-row">
+            <div className="emp-input-group">
+              <label>Salary Range</label>
+              <input name="salary" value={formData.salary} onChange={handleInputChange} />
+            </div>
+            <div className="emp-input-group">
+              <label>Job Type</label>
+              <select name="jobType" value={formData.jobType} onChange={handleInputChange}>
+                <option value="full-time">Full-time</option>
+                <option value="part-time">Part-time</option>
+                <option value="contract">Contract</option>
+                <option value="freelance">Freelance</option>
+              </select>
+            </div>
+          </div>
+          <div className="emp-input-group">
+            <label>Description</label>
+            <textarea name="description" value={formData.description} onChange={handleInputChange} rows="4" required />
+          </div>
+          <div className="emp-input-group">
+            <label>Skills (comma separated)</label>
+            <input name="skills" value={formData.skills} onChange={handleInputChange} />
+          </div>
+          <div className="emp-form-actions">
+            <button type="button" className="emp-btn-secondary" onClick={() => setShowPostForm(false)}>Cancel</button>
+            <button type="submit" className="emp-btn-primary">Post Job</button>
+          </div>
+        </form>
+      </section>
+    )}
+
+    {/* JOBS CONTENT */}
+    {activeTab === 'jobs' && (
+      <>
+        <h1 className="emp-page-title">Your Job Postings</h1>
+        {loading ? (
+          <div className="emp-empty-state">
+            <div className="emp-loading"></div>
+            <p>Loading...</p>
+          </div>
+        ) : jobs.length === 0 ? (
+          <div className="emp-empty-state">
+            <div className="emp-empty-graphic"></div>
+            <h3>No postings yet</h3>
+            <p>Post your first job to attract candidates</p>
+          </div>
+        ) : (
+          <div className="emp-jobs-grid">
+            {jobs.map(job => (
+              <div key={job.id} className="emp-job-card">
+                <div className="emp-job-header">
+                  <h3 className="emp-job-title">{job.title}</h3>
+                  <div className="emp-job-type">{job.jobType || 'Full-time'}</div>
+                </div>
+                <div className="emp-job-details">
+                  <div className="emp-job-location">{job.location}</div>
+                  {job.salary && <div className="emp-job-salary">{job.salary}</div>}
+                </div>
+                <p className="emp-job-description">{job.description?.substring(0, 100)}...</p>
+                <div className="emp-job-actions">
+                  <button className="emp-btn-primary" onClick={() => {
+                    setActiveTab('applications');
+                    fetchApplications(job.id);
+                  }}>
+                    View Applications
+                  </button>
+                  <button className="emp-btn-danger">Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    )}
+
+    {/* APPLICATIONS CONTENT */}
+    {activeTab === 'applications' && (
+      <>
+        <h1 className="emp-page-title">Job Applications</h1>
+        {loading ? (
+          <div className="emp-empty-state">
+            <div className="emp-loading"></div>
+            <p>Loading...</p>
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="emp-empty-state">
+            <div className="emp-empty-graphic"></div>
+            <h3>No applications</h3>
+            <p>Applications will appear here</p>
+          </div>
+        ) : (
+          <div className="emp-applications-table">
+            <div className="emp-table-header">
+              <h3>Applications ({applications.length})</h3>
+            </div>
+            <div className="emp-table-body">
+              {applications.map(app => (
+                <div key={app.id} className="emp-table-row">
+                  <div className="emp-applicant-info">
+                    <div className="emp-avatar-sm">{app.first_name?.[0]}{app.last_name?.[0]}</div>
+                    <div>
+                      <div className="emp-applicant-name">{app.first_name} {app.last_name}</div>
+                      <div className="emp-applicant-email">{app.email}</div>
+                    </div>
+                  </div>
+                  <div className="emp-table-status">
+                    <span className="emp-status-badge">{app.status || 'Pending'}</span>
+                  </div>
+                  <div className="emp-table-date">
+                    {new Date(app.created_at).toLocaleDateString()}
+                  </div>
+                  <div className="emp-table-action">
+                    <button className="emp-btn-outline">Review</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    )}
+  </main>
+</div>
+
   );
 }
