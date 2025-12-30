@@ -5,8 +5,11 @@ export const createJob = async (jobData) => {
   return response.data;
 };
 
+// ✅ THIS MUST CALL /jobs (NOT /jobs/feed)
 export const getJobs = async (filters) => {
-  const response = await api.get('/jobs', { params: filters });
+  const response = await api.get('/jobs', {
+    params: filters
+  });
   return response.data;
 };
 

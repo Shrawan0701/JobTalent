@@ -441,7 +441,7 @@ const fetchApplications = async () => {
                         )}
                       </div>
 
-                      +{job.description && (
+                      {job.description && (
   <p className="job-description">
     {stripHtml(job.description).substring(0, 120)}...
   </p>

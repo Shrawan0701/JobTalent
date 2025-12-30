@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../config/database.js';
 import { USER_ROLES } from '../config/constants.js';
+import { sendWelcome } from '../services/email/email.events.js';
+
 
 export const signup = async (req, res, next) => {
   try {
@@ -33,6 +35,11 @@ export const signup = async (req, res, next) => {
       'INSERT INTO profiles (user_id, profile_type, created_at) VALUES ($1, $2, NOW())',
       [user.id, role === 'talent' ? 'talent' : 'employer']
     );
+
+    sendWelcome({
+  email: user.email,
+  name: user.first_name,
+});
     
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },

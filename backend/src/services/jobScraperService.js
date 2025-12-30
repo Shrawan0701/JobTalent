@@ -17,8 +17,16 @@ export const scrapeJobs = async () => {
     try {
       const jobs = await fetchGreenhouseJobs(company.boardToken);
 
-      for (const ghJob of jobs) {
-        // 🔥 NEW: fetch full job detail
+      const limitedJobs = jobs.slice(0, 10);
+
+      for (const ghJob of limitedJobs) {
+        const exists = await query(
+          `SELECT id FROM jobs WHERE apply_url = $1`,
+          [ghJob.absolute_url]
+        );
+
+        if (exists.rows.length > 0) continue;
+
         const detail = await fetchGreenhouseJobDetail(
           company.boardToken,
           ghJob.id
@@ -28,7 +36,7 @@ export const scrapeJobs = async () => {
           {
             ...ghJob,
             content: detail.content,
-            absolute_url: detail.absolute_url, // FULL DESCRIPTION
+            absolute_url: detail.absolute_url,
           },
           company
         );
@@ -36,12 +44,13 @@ export const scrapeJobs = async () => {
         await upsertAggregatedJob(job);
       }
 
-      console.log(`✅ ${company.name}: ${jobs.length} jobs`);
+      console.log(` ${company.name}: ${limitedJobs.length} jobs`);
     } catch (err) {
-      console.error(`❌ ${company.name}`, err.message);
+      console.error(` ${company.name}`, err.message);
     }
   }
 };
+
 
 export const scrapeLeverJobs = async () => {
   console.log('🔄 Lever scraping started');

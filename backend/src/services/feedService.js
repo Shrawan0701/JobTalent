@@ -1,28 +1,64 @@
 import { query } from '../config/database.js';
 
-export const getFeedJobs = async () => {
+export const getJobs = async (req, res) => {
+  const {
+    page = 1,
+    limit = 20,
+    search,
+    jobType,
+    location,
+    datePosted
+  } = req.query;
+
+  const values = [];
+  let where = `WHERE status = 'active'`;
+
+  if (search) {
+    values.push(`%${search}%`);
+    where += `
+      AND (
+        title ILIKE $${values.length}
+        OR company_name ILIKE $${values.length}
+        OR location ILIKE $${values.length}
+      )
+    `;
+  }
+
+  if (jobType) {
+    values.push(jobType);
+    where += ` AND job_type = ANY($${values.length})`;
+  }
+
+  if (location) {
+    where += ` AND location ILIKE '%${location}%'`;
+  }
+
+  if (datePosted) {
+    const map = { '24h': '1 day', '7d': '7 days', '30d': '30 days' };
+    if (map[datePosted]) {
+      where += ` AND created_at >= NOW() - INTERVAL '${map[datePosted]}'`;
+    }
+  }
+
+  values.push(limit);
+  values.push((page - 1) * limit);
+
   const sql = `
-    SELECT
-      j.id,
-      j.title,
-      j.location,
-      j.salary,
-      j.description,
-      j.apply_url,
-      j.source,
-      COALESCE(c.name, j.company_name) AS company_name,
-      c.logo_url,
-      j.created_at
-    FROM jobs j
-    LEFT JOIN companies c ON j.company_id = c.id
-    WHERE j.status = 'active'
-    ORDER BY j.created_at DESC
-    LIMIT 50
+    SELECT *
+    FROM jobs
+    ${where}
+    ORDER BY created_at DESC
+    LIMIT $${values.length - 1}
+    OFFSET $${values.length}
   `;
 
-  const result = await query(sql);
-  return result.rows;
+  const result = await query(sql, values);
+  res.json({ jobs: result.rows });
 };
+
+
+
+
 
 export const getRecommendedJobs = async (userId) => {
   try {

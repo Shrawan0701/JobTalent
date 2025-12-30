@@ -1,5 +1,8 @@
 import { query } from '../config/database.js';
 
+/* =========================
+   UPSERT AGGREGATED JOB
+========================= */
 export const upsertAggregatedJob = async (job) => {
   const sql = `
     INSERT INTO jobs (
@@ -44,4 +47,29 @@ export const upsertAggregatedJob = async (job) => {
   ];
 
   await query(sql, values);
+};
+
+/* =========================
+   FEED QUERY (UNIQUE COMPANY)
+========================= */
+export const getFeedJobs = async () => {
+  const sql = `
+    SELECT *
+    FROM (
+      SELECT
+        j.*,
+        ROW_NUMBER() OVER (
+          PARTITION BY company_name
+          ORDER BY created_at DESC
+        ) AS rn
+      FROM jobs j
+      WHERE j.status = 'active'
+    ) ranked
+    WHERE rn = 1
+    ORDER BY created_at DESC
+    LIMIT 50;
+  `;
+
+  const result = await query(sql);
+  return result.rows;
 };

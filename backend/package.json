@@ -19,9 +19,11 @@
     "html-to-text": "^9.0.5",
     "jsonwebtoken": "^8.5.1",
     "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.4",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "sib-api-v3-sdk": "^8.5.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
