@@ -193,6 +193,40 @@ export const getJobs = async (req, res) => {
 };
 
 
+export const getEmployerJobs = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // get company for this employer
+    const companyResult = await query(
+      'SELECT id FROM companies WHERE user_id = $1',
+      [userId]
+    );
+
+    if (!companyResult.rows.length) {
+      return res.json({ jobs: [] });
+    }
+
+    const companyId = companyResult.rows[0].id;
+
+    const jobsResult = await query(
+      `
+      SELECT *
+      FROM jobs
+      WHERE company_id = $1
+      AND status = 'active'
+      ORDER BY created_at DESC
+      `,
+      [companyId]
+    );
+
+    res.json({ jobs: jobsResult.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 /* =========================
    JOB DETAIL
 ========================= */

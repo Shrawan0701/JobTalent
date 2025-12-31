@@ -27,6 +27,14 @@ router.get(
   jobController.getJobs
 );
 
+// 🔒 EMPLOYER ONLY - THEIR OWN JOBS
+router.get(
+  '/employer/my-jobs',
+  authMiddleware,
+  requireRole([USER_ROLES.EMPLOYER]),
+  jobController.getEmployerJobs
+);
+
 // 🔹 Job detail
 router.get('/:id', jobController.getJobById);
 

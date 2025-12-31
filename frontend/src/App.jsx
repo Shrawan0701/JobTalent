@@ -9,9 +9,15 @@ import TalentDashboard from './pages/TalentDashboard.jsx';
 import EmployerDashboard from './pages/EmployerDashboard.jsx';
 import TalentProfile from './pages/TalentProfile.jsx';
 
-// 🔥 MISSING IMPORTS (THIS WAS THE BUG)
+
 import OAuthSuccess from './pages/OAuthSuccess.jsx';
 import LoginRedirect from './pages/LoginRedirect.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import VerifyOTP from './pages/VerifyOTP.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
+import EmployerOnboarding from './pages/employer/EmployerOnboarding.jsx';
+import EmployerProfile from './pages/employer/EmployerProfile.jsx';
+
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -24,6 +30,15 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOTP />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route path="/employer/onboarding" element={<EmployerOnboarding />} />
+<Route path="/employer/profile" element={<EmployerProfile />} />
+
+
 
           {/* Google OAuth */}
           <Route path="/oauth-success" element={<OAuthSuccess />} />
