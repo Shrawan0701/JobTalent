@@ -147,6 +147,18 @@ CREATE TABLE events (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE password_otps (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  otp VARCHAR(6) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_password_otps_email ON password_otps(email);
+
+
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_profiles_user_id ON profiles(user_id);
@@ -160,3 +172,4 @@ CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_payments_user_id ON payments(user_id);
 CREATE INDEX idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX idx_events_user_id ON events(user_id);
+

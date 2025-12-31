@@ -28,3 +28,12 @@ export const logout = () => {
   localStorage.removeItem('auth_token');
   localStorage.removeItem('user');
 };
+
+export const sendResetOtp = (email) =>
+  api.post('/auth/forgot-password', { email });
+
+export const verifyResetOtp = (email, otp) =>
+  api.post('/auth/verify-otp', { email, otp });
+
+export const resetPassword = (email, otp, password) =>
+  api.post('/auth/reset-password', { email, otp, password });
