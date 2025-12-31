@@ -2,8 +2,6 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import '../assets/css/auth.css';
-import { getEmployerProfile } from '../services/employerService';
-
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,34 +25,21 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-   try {
-  const user = await login(formData.email, formData.password);
+    try {
+      const user = await login(formData.email, formData.password);
 
-  if (user.role === 'talent') {
-    navigate('/talent/dashboard');
-    return;
-  }
-
-  if (user.role === 'employer') {
-  const res = await getEmployerProfile();
-
-  if (res.data) {
-    navigate('/employer/dashboard');   // company exists
-  } else {
-    navigate('/employer/onboarding');  // first time only
-  }
-
-
-    return;
-  }
-
-  navigate('/');
-} catch (err) {
-  setError(err.response?.data?.message || 'Unable to sign in right now');
-} finally {
-  setLoading(false);
-}
-
+      if (user.role === 'talent') {
+        navigate('/talent/dashboard');
+      } else if (user.role === 'employer') {
+        navigate('/employer/dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to sign in right now');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const googleLogin = () => {
@@ -77,21 +62,52 @@ export default function Login() {
 
           {error && <div className="auth-alert">{error}</div>}
 
-         
+          <button
+            type="button"
+            className="auth-oauth-btn"
+            onClick={googleLogin}
+          >
+            <span className="auth-oauth-btn-icon">
+              {/* Google G icon (branding‑safe) */}
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill="#EA4335"
+                  d="M11.99 10.2v3.6h5.02c-.2 1.14-.81 2.1-1.73 2.75l2.8 2.17C19.4 17.46 20.2 15.48 20.2 13c0-.7-.06-1.22-.17-1.76H11.99z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M6.53 14.32A5.79 5.79 0 0 1 6.2 13c0-.46.08-.9.22-1.32L3.5 9.46A9.01 9.01 0 0 0 2.8 13c0 1.42.34 2.76.93 3.94l2.8-2.62z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M11.99 6.18c1.07 0 2.03.37 2.79 1.09l2.08-2.08A7.45 7.45 0 0 0 11.99 4a8.99 8.99 0 0 0-8.49 5.46l2.8 2.22c.4-1.21 1.25-2.24 2.45-2.78a4.98 4.98 0 0 1 3.24-.72z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M11.99 22a8.9 8.9 0 0 0 6.09-2.16l-2.8-2.17c-.76.53-1.73.83-3.29.83-2.48 0-4.6-1.65-5.37-3.94l-2.8 2.62A8.98 8.98 0 0 0 11.99 22z"
+                />
+              </svg>
+            </span>
+            <span>Continue with Google</span>
+          </button>
 
-        
+          <div className="auth-separator">
+            <div className="auth-separator-line" />
+            <span>or continue with email</span>
+            <div className="auth-separator-line" />
+          </div>
 
           <form onSubmit={handleSubmit} autoComplete="on">
             <div style={{ marginBottom: 14 }}>
               <label className="auth-label" htmlFor="email">
-                Email
+                Work email
               </label>
               <input
                 id="email"
                 type="email"
                 name="email"
                 className="auth-input"
-                
+                placeholder="you@company.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -109,7 +125,7 @@ export default function Login() {
                   style={{ fontSize: '0.78rem' }}
                   onClick={() => navigate('/forgot-password')}
                 >
-                  Forgot Password?
+                  Forgot?
                 </button>
               </div>
               <input
@@ -141,8 +157,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-
-      
     </div>
   );
 }

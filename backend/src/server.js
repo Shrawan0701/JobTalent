@@ -16,9 +16,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import passport from 'passport';
 import './config/passport.js';
 import googleAuthRoutes from './routes/googleAuthRoutes.js';
-import passwordResetRoutes from './routes/passwordResetRoutes.js'
 
-import employerRoutes from './routes/employer.routes.js';
 
 
 
@@ -36,7 +34,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/profile', profileRoutes);
@@ -44,11 +41,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/auth', googleAuthRoutes); 
-
-app.use('/api/auth', passwordResetRoutes);
-app.use('/api/employer', employerRoutes);
-
+app.use('/api/auth', googleAuthRoutes); // 🔥 REQUIRED
 
 
 app.get('/health', (req, res) => {

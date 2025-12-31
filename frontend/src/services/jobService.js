@@ -13,12 +13,6 @@ export const getJobs = async (filters) => {
   return response.data;
 };
 
-export const getEmployerJobs = async () => {
-  const response = await api.get('/jobs/employer/my-jobs');
-  return response.data;
-};
-
-
 export const getJobById = async (id) => {
   const response = await api.get(`/jobs/${id}`);
   return response.data;

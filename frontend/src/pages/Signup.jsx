@@ -2,8 +2,6 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import '../assets/css/auth.css';
-import registerImg from '../assets/images/register.jpg';
-
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -56,12 +54,11 @@ export default function Signup() {
         formData.lastName
       );
 
-     if (formData.role === 'talent') {
-  navigate('/talent/dashboard');
-} else {
-  navigate('/employer/onboarding');
-}
-
+      if (formData.role === 'talent') {
+        navigate('/talent/dashboard');
+      } else {
+        navigate('/employer/dashboard');
+      }
     } catch (err) {
       setError(
         err.response?.data?.message || 'Unable to create your account'
@@ -87,9 +84,40 @@ export default function Signup() {
 
           {error && <div className="auth-alert">{error}</div>}
 
-          
+          <button
+            type="button"
+            className="auth-oauth-btn"
+            onClick={handleGoogleSignup}
+          >
+            <span className="auth-oauth-btn-icon">
+              {/* same Google G icon */}
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill="#EA4335"
+                  d="M11.99 10.2v3.6h5.02c-.2 1.14-.81 2.1-1.73 2.75l2.8 2.17C19.4 17.46 20.2 15.48 20.2 13c0-.7-.06-1.22-.17-1.76H11.99z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M6.53 14.32A5.79 5.79 0 0 1 6.2 13c0-.46.08-.9.22-1.32L3.5 9.46A9.01 9.01 0 0 0 2.8 13c0 1.42.34 2.76.93 3.94l2.8-2.62z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M11.99 6.18c1.07 0 2.03.37 2.79 1.09l2.08-2.08A7.45 7.45 0 0 0 11.99 4a8.99 8.99 0 0 0-8.49 5.46l2.8 2.22c.4-1.21 1.25-2.24 2.45-2.78a4.98 4.98 0 0 1 3.24-.72z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M11.99 22a8.9 8.9 0 0 0 6.09-2.16l-2.8-2.17c-.76.53-1.73.83-3.29.83-2.48 0-4.6-1.65-5.37-3.94l-2.8 2.62A8.98 8.98 0 0 0 11.99 22z"
+                />
+              </svg>
+            </span>
+            <span>Sign up with Google</span>
+          </button>
 
-          
+          <div className="auth-separator">
+            <div className="auth-separator-line" />
+            <span>or continue with email</span>
+            <div className="auth-separator-line" />
+          </div>
 
           <div className="role-selector">
             <button
@@ -117,7 +145,7 @@ export default function Signup() {
               }
             >
               <span className="emoji"></span>
-              <span>Recruiter</span>
+              <span>Hiring team</span>
             </button>
           </div>
 
@@ -138,7 +166,7 @@ export default function Signup() {
                   type="text"
                   name="firstName"
                   className="auth-input"
-                  
+                  placeholder="Alex"
                   value={formData.firstName}
                   onChange={handleChange}
                   required
@@ -153,7 +181,7 @@ export default function Signup() {
                   type="text"
                   name="lastName"
                   className="auth-input"
-                  
+                  placeholder="Patel"
                   value={formData.lastName}
                   onChange={handleChange}
                   required
@@ -163,14 +191,14 @@ export default function Signup() {
 
             <div style={{ marginBottom: 12 }}>
               <label className="auth-label" htmlFor="signup-email">
-                Email
+                Work email
               </label>
               <input
                 id="signup-email"
                 type="email"
                 name="email"
                 className="auth-input"
-               
+                placeholder="you@company.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -226,25 +254,6 @@ export default function Signup() {
           </div>
         </div>
       </div>
-
-      <div className="auth-right">
-      <div className="auth-visual">
-       <img
-  src={registerImg}
-  alt="Professional working on laptop"
-  className="auth-visual-img"
-/>
-
-
-        <div className="auth-visual-overlay">
-          <h2>Build your career with Curson</h2>
-          <p>Where ambitious talent meets trusted recruiters.</p>
-        </div>
-      </div>
-    </div>
-   
-
-
     </div>
   );
 }

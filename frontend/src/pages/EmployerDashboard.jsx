@@ -4,7 +4,6 @@ import * as jobService from '../services/jobService.js';
 import * as applicationService from '../services/applicationService.js';
 import '../assets/css/employer.css';
 import { useNavigate } from 'react-router-dom';
-import EmployerProfile from './employer/EmployerProfile.jsx';
 
 export default function EmployerDashboard() {
   const { user, logout } = useContext(AuthContext);
@@ -31,15 +30,16 @@ export default function EmployerDashboard() {
   }, []);
 
   const fetchJobs = async () => {
-  try {
-    setLoading(true);
-    const response = await jobService.getEmployerJobs();
-    setJobs(response.jobs || []);
-  } finally {
-    setLoading(false);
-  }
-};
-
+    try {
+      setLoading(true);
+      const response = await jobService.getJobs({ source: 'direct' });
+      setJobs(response.jobs || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchApplications = async (jobId) => {
     try {
@@ -96,8 +96,8 @@ export default function EmployerDashboard() {
     <div className="emp-header-inner">
       <div className="emp-logo-premium">Curson</div>
       <div className="emp-user-section">
-       
-        
+        <div className="emp-avatar">{user?.email?.[0]?.toUpperCase()}</div>
+        <span className="emp-user-email">{user?.email}</span>
         <button className="emp-logout-text" onClick={handleLogout}>
           Logout
         </button>
@@ -107,39 +107,19 @@ export default function EmployerDashboard() {
 
   <main className="emp-main-content">
     {/* TABS */}
-   <div className="emp-tabs-section">
-  <div className="emp-tabs-nav">
-    <button
-      className={`emp-tab-btn ${activeTab === 'jobs' ? 'active' : ''}`}
-      onClick={() => setActiveTab('jobs')}
-    >
-      My Jobs
-    </button>
-
-    <button
-      className={`emp-tab-btn ${activeTab === 'applications' ? 'active' : ''}`}
-      onClick={() => setActiveTab('applications')}
-      disabled={!selectedJobId}
-    >
-      Applications
-    </button>
-
-    <button
-      className={`emp-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-      onClick={() => setActiveTab('profile')}
-    >
-      Company Profile
-    </button>
-  </div>
-
-  <button
-    className="emp-post-job-btn"
-    onClick={() => setShowPostForm(!showPostForm)}
-  >
-    + Post Job
-  </button>
-</div>
-
+    <div className="emp-tabs-section">
+      <div className="emp-tabs-nav">
+        <button className={`emp-tab-btn ${activeTab === 'jobs' ? 'active' : ''}`} onClick={() => setActiveTab('jobs')}>
+          My Jobs
+        </button>
+        <button className={`emp-tab-btn ${activeTab === 'applications' ? 'active' : ''}`} onClick={() => setActiveTab('applications')} disabled={!selectedJobId}>
+          Applications
+        </button>
+      </div>
+      <button className="emp-post-job-btn" onClick={() => setShowPostForm(!showPostForm)}>
+        + Post Job
+      </button>
+    </div>
 
     {/* POST JOB FORM */}
     {showPostForm && (
@@ -201,7 +181,7 @@ export default function EmployerDashboard() {
           </div>
         ) : jobs.length === 0 ? (
           <div className="emp-empty-state">
-           
+            <div className="emp-empty-graphic"></div>
             <h3>No postings yet</h3>
             <p>Post your first job to attract candidates</p>
           </div>
@@ -280,15 +260,6 @@ export default function EmployerDashboard() {
         )}
       </>
     )}
-
-    {/* COMPANY PROFILE TAB */}
-{activeTab === 'profile' && (
-  <>
-    <h1 className="emp-page-title">Company Profile</h1>
-    <EmployerProfile />
-  </>
-)}
-
   </main>
 </div>
 

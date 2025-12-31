@@ -6,24 +6,22 @@ export default function Landing() {
   return (
     <div className="landing-container">
       {/* ================= NAVBAR ================= */}
-     <header className="navbar navbar-expand-lg">
-  <div className="container">
-    <Link className="navbar-brand" to="/">
-      Curson
-    </Link>
+      <header className="navbar navbar-expand-lg navbar-light bg-white">
+        <div className="container">
+          <Link className="navbar-brand fw-bold" to="/">
+            Curson
+          </Link>
 
-    <nav className="navbar-nav ms-auto d-flex align-items-center gap-3">
-      <Link className="nav-link nav-login" to="/login">
-        Login
-      </Link>
-
-      <Link to="/signup" className="btn btn-nav-signup">
-        Sign up
-      </Link>
-    </nav>
-  </div>
-</header>
-
+          <nav className="navbar-nav ms-auto d-flex align-items-center">
+            <Link className="nav-link me-3" to="/login">
+              Login
+            </Link>
+            <Link to="/signup" className="btn btn-nav-signup">
+              Sign up
+            </Link>
+          </nav>
+        </div>
+      </header>
 
       {/* ================= HERO ================= */}
       <section className="hero-section">
@@ -59,23 +57,28 @@ export default function Landing() {
           <div className="row">
             <div className="col-md-3 col-6">
               <div className="stat-card">
-                <div className="stat-number">2K+</div>
+                <div className="stat-number">50K+</div>
                 <div className="stat-label">Active Jobs</div>
               </div>
             </div>
             <div className="col-md-3 col-6">
               <div className="stat-card">
-                <div className="stat-number">10K+</div>
+                <div className="stat-number">200K+</div>
                 <div className="stat-label">Professionals</div>
               </div>
             </div>
             <div className="col-md-3 col-6">
               <div className="stat-card">
-                <div className="stat-number">1K+</div>
+                <div className="stat-number">15K+</div>
                 <div className="stat-label">Companies</div>
               </div>
             </div>
-          
+            <div className="col-md-3 col-6">
+              <div className="stat-card">
+                <div className="stat-number">98%</div>
+                <div className="stat-label">Success Rate</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
