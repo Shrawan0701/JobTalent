@@ -9,36 +9,40 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* ===============================
-     RESTORE SESSION (JWT ONLY)
-  =============================== */
+  /* =========================
+     RESTORE SESSION (TOKEN + USER)
+  ========================= */
   useEffect(() => {
     const savedToken = localStorage.getItem('auth_token');
+    const savedUser = localStorage.getItem('user');
 
-    if (savedToken) {
+    if (savedToken && savedUser) {
       try {
-        const decoded = jwtDecode(savedToken);
+        const parsedUser = JSON.parse(savedUser);
+
+        const normalizedUser = {
+          ...parsedUser,
+          isOnboarded:
+            parsedUser.isOnboarded ??
+            parsedUser.is_onboarded ??
+            false,
+        };
 
         setToken(savedToken);
-        setUser({
-          id: decoded.userId,
-          email: decoded.email,
-          role: decoded.role,
-        });
+        setUser(normalizedUser);
       } catch (err) {
-        // invalid / expired token
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
       }
     }
 
     setLoading(false);
   }, []);
 
-  /* ===============================
-     SIGNUP
-  =============================== */
+  /* =========================
+     SIGNUP (EMAIL / PASSWORD)
+  ========================= */
   const signup = async (email, password, role, firstName, lastName) => {
-    // clear old session
     localStorage.clear();
 
     const data = await authService.signup(
@@ -49,65 +53,79 @@ export const AuthProvider = ({ children }) => {
       lastName
     );
 
-    localStorage.setItem('auth_token', data.token);
+    const normalizedUser = {
+      ...data.user,
+      isOnboarded:
+        data.user.isOnboarded ??
+        data.user.is_onboarded ??
+        false,
+    };
 
-    const decoded = jwtDecode(data.token);
+    localStorage.setItem('auth_token', data.token);
+    localStorage.setItem('user', JSON.stringify(normalizedUser));
 
     setToken(data.token);
-    setUser({
-      id: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
-    });
+    setUser(normalizedUser);
 
-    return decoded;
+    return normalizedUser;
   };
 
-  /* ===============================
-     LOGIN
-  =============================== */
+  /* =========================
+     LOGIN (EMAIL / PASSWORD)
+  ========================= */
   const login = async (email, password) => {
-    // clear old session
     localStorage.clear();
 
     const data = await authService.login(email, password);
 
-    localStorage.setItem('auth_token', data.token);
+    const normalizedUser = {
+      ...data.user,
+      isOnboarded:
+        data.user.isOnboarded ??
+        data.user.is_onboarded ??
+        true, // ✅ default true on login
+    };
 
-    const decoded = jwtDecode(data.token);
+    localStorage.setItem('auth_token', data.token);
+    localStorage.setItem('user', JSON.stringify(normalizedUser));
 
     setToken(data.token);
-    setUser({
-      id: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
-    });
+    setUser(normalizedUser);
 
-    return decoded;
+    return normalizedUser;
   };
 
-  /* ===============================
+  /* =========================
      GOOGLE OAUTH
-  =============================== */
+  ========================= */
   const setUserFromToken = (token) => {
     localStorage.clear();
-    localStorage.setItem('auth_token', token);
 
     const decoded = jwtDecode(token);
 
-    setToken(token);
-    setUser({
+    const user = {
       id: decoded.userId,
       email: decoded.email,
       role: decoded.role,
-    });
+      isOnboarded:
+        decoded.isOnboarded ??
+        decoded.is_onboarded ??
+        false,
+    };
+
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    setToken(token);
+    setUser(user);
   };
 
-  /* ===============================
+  /* =========================
      LOGOUT
-  =============================== */
+  ========================= */
   const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
     setToken(null);
     setUser(null);
   };
@@ -122,6 +140,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         setUserFromToken,
+        setUser, // ✅ needed for onboarding completion
       }}
     >
       {children}

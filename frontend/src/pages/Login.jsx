@@ -2,8 +2,6 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import '../assets/css/auth.css';
-import { getEmployerProfile } from '../services/employerService';
-
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,34 +25,31 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-   try {
-  const user = await login(formData.email, formData.password);
+    try {
+      const user = await login(formData.email, formData.password);
 
-  if (user.role === 'talent') {
-    navigate('/talent/dashboard');
-    return;
-  }
+      /* ========= ROLE + ONBOARDING AWARE REDIRECT ========= */
 
-  if (user.role === 'employer') {
-  const res = await getEmployerProfile();
+      if (user.role === 'talent') {
+        navigate('/talent/dashboard');
+        return;
+      }
 
-  if (res.data) {
-    navigate('/employer/dashboard');   // company exists
-  } else {
-    navigate('/employer/onboarding');  // first time only
-  }
+      if (user.role === 'employer') {
+        if (user.isOnboarded) {
+          navigate('/employer/dashboard');
+        } else {
+          navigate('/employer/onboarding');
+        }
+        return;
+      }
 
-
-    return;
-  }
-
-  navigate('/');
-} catch (err) {
-  setError(err.response?.data?.message || 'Unable to sign in right now');
-} finally {
-  setLoading(false);
-}
-
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to sign in right now');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const googleLogin = () => {
@@ -77,9 +72,20 @@ export default function Login() {
 
           {error && <div className="auth-alert">{error}</div>}
 
-         
+          {/* GOOGLE LOGIN */}
+          <button
+            type="button"
+            className="auth-oauth-btn"
+            onClick={googleLogin}
+          >
+            Continue with Google
+          </button>
 
-        
+          <div className="auth-separator">
+            <div className="auth-separator-line" />
+            <span>or continue with email</span>
+            <div className="auth-separator-line" />
+          </div>
 
           <form onSubmit={handleSubmit} autoComplete="on">
             <div style={{ marginBottom: 14 }}>
@@ -91,7 +97,6 @@ export default function Login() {
                 type="email"
                 name="email"
                 className="auth-input"
-                
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -141,8 +146,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-
-      
     </div>
   );
 }
